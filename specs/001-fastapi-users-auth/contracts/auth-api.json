@@ -1,0 +1,912 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "万相营造 FastAPI-Users 认证API",
+    "version": "2.0.0",
+    "description": "基于FastAPI-Users的完整认证系统API规范",
+    "contact": {
+      "name": "万相营造开发团队",
+      "email": "dev@admagic.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "开发环境"
+    },
+    {
+      "url": "https://api.admagic.com",
+      "description": "生产环境"
+    }
+  ],
+  "tags": [
+    {
+      "name": "认证 - JWT",
+      "description": "JWT认证相关接口"
+    },
+    {
+      "name": "认证 - Cookie", 
+      "description": "Cookie认证相关接口"
+    },
+    {
+      "name": "用户注册",
+      "description": "用户注册和账户创建"
+    },
+    {
+      "name": "密码管理",
+      "description": "密码重置和修改"
+    },
+    {
+      "name": "邮箱验证",
+      "description": "邮箱验证相关功能"
+    },
+    {
+      "name": "用户管理",
+      "description": "用户信息管理"
+    },
+    {
+      "name": "Better Auth兼容",
+      "description": "Better Auth API兼容层"
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["用户注册"],
+        "summary": "用户注册",
+        "description": "创建新用户账户，自动发送欢迎邮件",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRegister"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "注册成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "注册失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/jwt/login": {
+      "post": {
+        "tags": ["认证 - JWT"],
+        "summary": "JWT登录",
+        "description": "使用邮箱密码登录，返回JWT令牌",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginForm"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "登录失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/jwt/logout": {
+      "post": {
+        "tags": ["认证 - JWT"],
+        "summary": "JWT登出",
+        "description": "撤销JWT令牌",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "登出成功"
+          },
+          "401": {
+            "description": "未授权",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/cookie/login": {
+      "post": {
+        "tags": ["认证 - Cookie"],
+        "summary": "Cookie登录",
+        "description": "使用邮箱密码登录，设置认证Cookie",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginForm"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "登录成功，Cookie已设置",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "认证Cookie"
+              }
+            }
+          },
+          "400": {
+            "description": "登录失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/cookie/logout": {
+      "post": {
+        "tags": ["认证 - Cookie"],
+        "summary": "Cookie登出",
+        "description": "清除认证Cookie",
+        "responses": {
+          "204": {
+            "description": "登出成功，Cookie已清除"
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": ["密码管理"],
+        "summary": "请求密码重置",
+        "description": "发送密码重置邮件",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "重置邮件已发送"
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": ["密码管理"],
+        "summary": "重置密码",
+        "description": "使用重置令牌设置新密码",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "密码重置成功"
+          },
+          "400": {
+            "description": "重置失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/request-verify-token": {
+      "post": {
+        "tags": ["邮箱验证"],
+        "summary": "请求验证邮件",
+        "description": "发送邮箱验证邮件",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "验证邮件已发送"
+          }
+        }
+      }
+    },
+    "/api/auth/verify": {
+      "post": {
+        "tags": ["邮箱验证"],
+        "summary": "验证邮箱",
+        "description": "使用验证令牌验证邮箱",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailConfirm"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "邮箱验证成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "验证失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": ["用户管理"],
+        "summary": "获取当前用户信息",
+        "description": "获取已认证用户的详细信息",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "用户信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未授权",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["用户管理"],
+        "summary": "更新用户信息",
+        "description": "更新已认证用户的信息",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "更新失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未授权",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-up": {
+      "post": {
+        "tags": ["Better Auth兼容"],
+        "summary": "兼容注册接口",
+        "description": "Better Auth兼容的用户注册接口",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BetterAuthRegister"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "注册成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetterAuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "注册失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetterAuthErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-in": {
+      "post": {
+        "tags": ["Better Auth兼容"],
+        "summary": "兼容登录接口",
+        "description": "Better Auth兼容的用户登录接口",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BetterAuthLogin"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetterAuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "登录失败",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetterAuthErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "tags": ["Better Auth兼容"],
+        "summary": "获取会话信息",
+        "description": "Better Auth兼容的会话信息接口",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "会话信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BetterAuthSessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["系统"],
+        "summary": "健康检查",
+        "description": "系统健康状态检查",
+        "responses": {
+          "200": {
+            "description": "系统健康",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserRegister": {
+        "type": "object",
+        "required": ["email", "password", "name"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 128,
+            "example": "password123"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "张三"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50,
+            "example": "zhangsan"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com/avatar.jpg"
+          }
+        }
+      },
+      "LoginForm": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "邮箱地址",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "example": "张三"
+          },
+          "username": {
+            "type": "string",
+            "example": "zhangsan"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "example": false
+          },
+          "is_verified": {
+            "type": "boolean",
+            "example": true
+          },
+          "credits": {
+            "type": "integer",
+            "example": 100
+          },
+          "is_premium": {
+            "type": "boolean",
+            "example": false
+          },
+          "role": {
+            "type": "string",
+            "enum": ["USER", "ADMIN", "DESIGNER"],
+            "example": "USER"
+          },
+          "plan": {
+            "type": "string",
+            "enum": ["FREE", "PRO", "ENTERPRISE"],
+            "example": "FREE"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T00:00:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T00:00:00Z"
+          }
+        }
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "example": "新姓名"
+          },
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 50,
+            "example": "newusername"
+          },
+          "image": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com/new-avatar.jpg"
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+          },
+          "token_type": {
+            "type": "string",
+            "example": "bearer"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "required": ["token", "password"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "reset_token_here"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 128,
+            "example": "newpassword123"
+          }
+        }
+      },
+      "VerifyEmailRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          }
+        }
+      },
+      "VerifyEmailConfirm": {
+        "type": "object",
+        "required": ["token"],
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "verify_token_here"
+          }
+        }
+      },
+      "BetterAuthRegister": {
+        "type": "object",
+        "required": ["email", "password", "name"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          },
+          "name": {
+            "type": "string",
+            "example": "张三"
+          },
+          "username": {
+            "type": "string",
+            "example": "zhangsan"
+          }
+        }
+      },
+      "BetterAuthLogin": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          },
+          "callbackURL": {
+            "type": "string",
+            "example": "/dashboard"
+          },
+          "rememberMe": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "BetterAuthResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/UserResponse"
+              },
+              "session": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                  },
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T01:00:00Z"
+                  }
+                }
+              }
+            }
+          },
+          "error": {
+            "type": "null"
+          }
+        }
+      },
+      "BetterAuthSessionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/UserResponse"
+              },
+              "session": {
+                "type": "object",
+                "properties": {
+                  "active": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "expires_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-12-31T23:59:59Z"
+                  }
+                }
+              }
+            }
+          },
+          "error": {
+            "type": "null"
+          }
+        }
+      },
+      "BetterAuthErrorResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "null"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "登录失败"
+              },
+              "detail": {
+                "type": "string",
+                "example": "邮箱或密码错误"
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "example": "错误描述"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "healthy"
+          },
+          "service": {
+            "type": "string",
+            "example": "AdMagic FastAPI-Users Backend"
+          },
+          "version": {
+            "type": "string",
+            "example": "2.0.0"
+          },
+          "auth_system": {
+            "type": "string",
+            "example": "FastAPI-Users"
+          },
+          "features": {
+            "type": "object",
+            "example": {
+              "user_registration": "✅",
+              "email_verification": "✅",
+              "password_reset": "✅",
+              "jwt_auth": "✅",
+              "cookie_auth": "✅",
+              "better_auth_compatibility": "✅"
+            }
+          }
+        }
+      }
+    }
+  }
+}

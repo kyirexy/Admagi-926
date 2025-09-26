@@ -1,0 +1,47 @@
+services:
+  # PostgreSQL数据库 - 使用国内镜像
+  postgres:
+    image: registry.cn-hangzhou.aliyuncs.com/library/postgres:15
+    container_name: admagic_postgres
+    environment:
+      POSTGRES_DB: admagic
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - admagic-network
+
+  # Redis缓存 - 使用国内镜像
+  redis:
+    image: registry.cn-hangzhou.aliyuncs.com/library/redis:7-alpine
+    container_name: admagic_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - admagic-network
+
+  # 数据库管理工具 - 使用国内镜像
+  adminer:
+    image: registry.cn-hangzhou.aliyuncs.com/library/adminer:latest
+    container_name: admagic_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - admagic-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  admagic-network:
+    driver: bridge

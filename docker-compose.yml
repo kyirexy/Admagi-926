@@ -1,0 +1,89 @@
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_APP_NAME=万相营造
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_uploads:/app/uploads
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:password@postgres:5432/admagic
+      - DATABASE_URL_SYNC=postgresql://postgres:password@postgres:5432/admagic
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=development-secret-key-change-in-production
+      - ALLOWED_ORIGINS=["http://localhost:3000"]
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - REPLICATE_API_TOKEN=${REPLICATE_API_TOKEN:-}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - app-network
+
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: admagic
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - app-network
+
+  # 数据库管理工具 (可选)
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_uploads:
+
+networks:
+  app-network:
+    driver: bridge
