@@ -23,21 +23,29 @@ export default function HomePage() {
       title: '即梦AI-视频生成3.0 Pro',
       description: '火山引擎即梦AI-视频生成3.0 Pro，支持文生视频和图生视频，1080P高清专业级质感',
       icon: <Play className="h-6 w-6" />,
-      href: '/video-generation',
+      href: '/ai',
       previewImage: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400&h=200&fit=crop&crop=center',
-      features: ['文生视频', '图生视频', '1080P高清'],
+      features: ['文生视频', '图生视频', '1080P高清', '多镜头叙事'],
       isPopular: true,
       badge: '最新'
     },
     {
-      title: '极梦3.0图片生成',
-      description: '火山引擎极梦3.0模型，文字转图片，多种艺术风格，高质量创意输出',
+      title: '电商营销视频',
+      description: '专为电商场景优化的AI视频生成，提升商品展示效果和转化率',
       icon: <Image className="h-6 w-6" />,
-      href: '/dream-3-image',
+      href: '/ai',
       previewImage: 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=400&h=200&fit=crop&crop=center',
-      features: ['极梦3.0模型', '多种艺术风格', '高分辨率输出'],
+      features: ['商品展示', '营销优化', '转化提升', '场景丰富'],
       isPopular: true,
       badge: '热门'
+    },
+    {
+      title: 'AI营销文案',
+      description: '智能生成电商营销文案，多场景应用，提升转化效果',
+      icon: <MessageSquare className="h-6 w-6" />,
+      href: '/ai-tools/text-generation',
+      previewImage: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=200&fit=crop&crop=center',
+      features: ['电商文案', '多语言支持', 'SEO友好', '转化优化']
     },
     {
       title: 'AI页面制作',
@@ -45,24 +53,16 @@ export default function HomePage() {
       icon: <FileText className="h-6 w-6" />,
       href: '/ai-tools/page-generation',
       previewImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400&h=200&fit=crop&crop=center',
-      features: ['响应式设计', 'SEO优化', '模板丰富'],
+      features: ['响应式设计', 'SEO优化', '模板丰富', '快速发布'],
       badge: '新功能'
     },
     {
-      title: 'AI文案工具',
-      description: '智能营销文案，多场景应用，提升转化效果',
-      icon: <MessageSquare className="h-6 w-6" />,
-      href: '/ai-tools/text-generation',
-      previewImage: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400&h=200&fit=crop&crop=center',
-      features: ['多语言支持', '语调调节', 'SEO友好']
-    },
-    {
-      title: 'AI工具箱',
-      description: '图片处理、音频生成、视频制作等实用工具集合',
+      title: 'AI营销工具箱',
+      description: '图片处理、音频生成、视频制作等电商营销实用工具集合',
       icon: <Wrench className="h-6 w-6" />,
       href: '/ai-tools',
       previewImage: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=400&h=200&fit=crop&crop=center',
-      features: ['背景移除', '图像增强', '格式转换']
+      features: ['背景移除', '图像增强', '格式转换', '营销优化']
     }
   ];
 
@@ -84,28 +84,47 @@ export default function HomePage() {
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="slide-in-up">
                 <h1 className="responsive-title font-bold mb-4 text-gray-900">
-                  万相营造
+                  翔宇星辰
                   <br />
-                  <span className="text-2xl font-normal text-gray-700">用AI创造，让效果说话</span>
+                  <span className="text-2xl font-normal text-gray-700">电商场景下的AI时代营销大师</span>
                 </h1>
                 <p className="responsive-text text-gray-600 mb-6 leading-relaxed">
                   <span className="inline-flex items-center mr-6">
                     <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                    阿里妈妈好效果实验室
+                    即梦AI-视频生成 3.0 Pro
                   </span>
                   <span className="inline-flex items-center">
                     <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>
-                    AI一站式营销素材创意生产平台
+                    支持文生视频和图生视频，1080P高清专业级质感
                   </span>
                 </p>
                 
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>多镜头叙事能力</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>动态表现流畅自然</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>电商营销专业优化</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                    <span>AI智能创意生成</span>
+                  </div>
+                </div>
+                
                 <div className="flex flex-wrap gap-3">
                   <Button size="lg" className="bg-blue-600 text-white hover:bg-blue-700 button-press hover-lift">
-                    开始创作
+                    立即体验AI创作
                   </Button>
                   <Button size="lg" variant="outline" className="border-blue-300 text-blue-600 hover:bg-blue-50 button-press">
                     <Play className="mr-2 h-4 w-4" />
-                    观看介绍
+                    观看演示视频
                   </Button>
                 </div>
               </div>
@@ -202,10 +221,10 @@ export default function HomePage() {
           <CardContent>
             <div className="space-y-3">
               {[
-                { name: '新中式美学', count: '1.2k' },
-                { name: '古风文艺', count: '856' },
-                { name: '现代简约', count: '743' },
-                { name: '商务专业', count: '692' }
+                { name: '电商营销视频', count: '2.1k' },
+                { name: '商品展示模板', count: '1.8k' },
+                { name: '品牌宣传片', count: '1.5k' },
+                { name: '产品介绍视频', count: '1.2k' }
               ].map((template, index) => (
                 <div key={index} className="flex justify-between items-center hover:bg-gray-50 p-2 rounded smooth-transition">
                   <span className="text-sm">{template.name}</span>
@@ -227,9 +246,9 @@ export default function HomePage() {
           <CardContent>
             <div className="space-y-3">
               {[
-                { user: '设计师小王', action: '生成了精美海报', time: '2分钟前' },
-                { user: '营销专员', action: '创建了落地页', time: '5分钟前' },
-                { user: '内容创作者', action: '制作了宣传视频', time: '8分钟前' }
+                { user: '电商运营小李', action: '生成了商品展示视频', time: '2分钟前' },
+                { user: '品牌营销专员', action: '创建了宣传片', time: '5分钟前' },
+                { user: '内容创作者', action: '制作了产品介绍视频', time: '8分钟前' }
               ].map((activity, index) => (
                 <div key={index} className="text-sm hover:bg-gray-50 p-2 rounded smooth-transition">
                   <div className="flex justify-between items-start">
@@ -293,12 +312,12 @@ export default function HomePage() {
             </div>
             
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100 card-hover">
-              <h4 className="font-semibold mb-2 text-gray-900">视频生成功能</h4>
+              <h4 className="font-semibold mb-2 text-gray-900">电商视频生成功能</h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• 真人模特AI换装</li>
-                <li>• 多场景背景切换</li>
-                <li>• 专业级视频输出</li>
-                <li>• 一键社交媒体分享</li>
+                <li>• 商品展示视频生成</li>
+                <li>• 多场景营销背景</li>
+                <li>• 专业级1080P输出</li>
+                <li>• 电商平台一键发布</li>
               </ul>
             </div>
           </div>

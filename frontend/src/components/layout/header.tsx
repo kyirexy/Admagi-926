@@ -65,10 +65,13 @@ export function Header() {
         {/* Logo区域 */}
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">万</span>
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">🎬</span>
             </div>
-            <span className="font-bold text-xl">万相营造</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">翔宇星辰</span>
+              <span className="text-xs text-muted-foreground">即梦AI-视频生成 3.0 Pro</span>
+            </div>
           </Link>
         </div>
 
