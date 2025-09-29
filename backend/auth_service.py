@@ -12,7 +12,7 @@ import uuid
 import os
 
 from models_adapted import User, Session as DBSession, UserRole, UserPlan
-from schemas_adapted import UserCreate, UserResponse, Token, TokenData
+from schemas_fastapi_users import UserCreate, UserResponse, Token, TokenData
 
 # 密码加密上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -68,21 +68,24 @@ class AuthService:
             id=str(uuid.uuid4()),
             email=user_create.email,
             name=user_create.name,
-            image=user_create.image,
+            image=getattr(user_create, 'image', None),  # 安全获取image字段
             password_hash=hashed_password,
             emailVerified=False,  # 新用户邮箱未验证
-            role=UserRole.USER,
-            plan=UserPlan.FREE,
+            role=UserRole.USER,  # 使用ENUM类型
+            plan=UserPlan.FREE,  # 使用ENUM类型
             createdAt=datetime.utcnow(),
             updatedAt=datetime.utcnow()
         )
         
         # 保存到数据库
-        self.db.add(db_user)
-        self.db.commit()
-        self.db.refresh(db_user)
-        
-        return db_user
+        try:
+            self.db.add(db_user)
+            self.db.commit()
+            self.db.refresh(db_user)
+            return db_user
+        except Exception as e:
+            self.db.rollback()
+            raise ValueError(f"创建用户失败: {str(e)}")
     
     def authenticate_user(self, email: str, password: str) -> Union[User, bool]:
         """验证用户身份"""

@@ -1,157 +1,171 @@
-# AdMagic 后端服务
+# 万相营造 FastAPI 后端服务
 
-万相营造 AI电商平台的 Node.js 后端服务，基于 Better Auth 提供用户认证功能。
+基于 FastAPI 的用户认证和AI服务系统，提供完整的用户管理、认证授权和业务功能。
 
-## 项目结构
-
-```
-backend/
-├── src/
-│   ├── config/          # 配置文件
-│   │   ├── auth.js      # Better Auth 配置
-│   │   └── database.js  # 数据库配置
-│   ├── controllers/     # 控制器 (待添加)
-│   ├── middleware/      # 中间件
-│   │   └── cors.js      # CORS 中间件
-│   ├── models/          # 数据模型 (待添加)
-│   ├── routes/          # 路由
-│   │   └── auth.js      # 认证路由
-│   ├── services/        # 服务层
-│   │   └── email.js     # 邮件服务
-│   └── utils/           # 工具函数
-│       └── request.js   # 请求处理工具
-├── server.js            # 服务器入口文件
-├── package.json         # 项目依赖
-├── .env.example         # 环境变量示例
-└── README.md           # 项目说明
-```
-
-## 快速开始
+## 🚀 快速开始
 
 ### 1. 安装依赖
 
 ```bash
-npm install
+pip install -r requirements.txt
 ```
 
 ### 2. 配置环境变量
 
-复制 `.env.example` 为 `.env` 并填写实际配置：
+复制 `env.example` 到 `.env` 并配置：
 
 ```bash
-cp .env.example .env
+cp env.example .env
 ```
 
-### 3. 数据库设置
+主要配置项：
+- `DATABASE_URL`: PostgreSQL数据库连接
+- `SECRET_KEY`: JWT密钥
+- `PORT`: 服务端口（默认8000）
 
-确保 PostgreSQL 数据库运行，并创建 `admagic` 数据库：
-
-```sql
-CREATE DATABASE admagic;
-```
-
-运行数据库表创建脚本：
+### 3. 启动服务
 
 ```bash
-psql -h localhost -U postgres -d admagic -f create_tables.sql
+python start_server.py
 ```
 
-### 4. 启动服务器
+或者直接运行：
 
-#### 方式一：使用 Python 启动脚本
 ```bash
-python start_dev.py
+python app.py
 ```
 
-#### 方式二：直接使用 npm
-```bash
-npm start
+## 📁 项目结构
+
+```
+backend/
+├── app.py                    # 主应用入口
+├── start_server.py          # 启动脚本
+├── requirements.txt          # Python依赖
+├── env.example              # 环境变量示例
+├── README.md               # 项目说明
+├── models_adapted.py       # 数据库模型
+├── schemas_fastapi_users.py # API架构定义
+├── auth_service.py         # 认证服务
+├── auth.py                 # 认证工具函数
+└── database.py             # 数据库连接
 ```
 
-#### 方式三：开发模式
-```bash
-npm run dev
-```
+## 🔐 认证系统
 
-## API 端点
+### 功能特性
 
-### 认证相关
+- ✅ 用户注册和登录
+- ✅ JWT令牌认证
+- ✅ 会话管理
+- ✅ 密码加密存储
+- ✅ 用户信息管理
+- ✅ 角色权限控制
+- ✅ 邮箱验证（待实现）
+- ✅ 密码重置（待实现）
 
-- `POST /api/auth/sign-up` - 用户注册
-- `POST /api/auth/sign-in` - 用户登录
-- `POST /api/auth/sign-out` - 用户登出
+### API接口
+
+#### 用户认证
+- `POST /api/auth/register` - 用户注册
+- `POST /api/auth/sign-up` - 用户注册（兼容接口）
+- `POST /api/auth/jwt/login` - JWT登录
+- `POST /api/auth/sign-in` - 用户登录（兼容接口）
+- `POST /api/auth/jwt/logout` - JWT登出
+- `POST /api/auth/sign-out` - 用户登出（兼容接口）
 - `GET /api/auth/session` - 获取会话信息
-- `POST /api/auth/forgot-password` - 忘记密码
-- `POST /api/auth/reset-password` - 重置密码
-- `POST /api/auth/verify-email` - 验证邮箱
 
-### 其他
+#### 用户管理
+- `GET /api/users/me` - 获取当前用户信息
+- `PATCH /api/users/me` - 更新用户信息
 
-- `GET /` - API 信息
-- `GET /health` - 健康检查
+#### 管理员功能
+- `GET /api/admin/users` - 获取所有用户（管理员）
+- `GET /api/admin/stats` - 获取统计信息（管理员）
 
-## 数据库表结构
+## 🗄️ 数据库
 
-### user 表
-- `id` - 用户ID (主键)
-- `name` - 用户名
-- `email` - 邮箱 (唯一)
-- `emailVerified` - 邮箱验证状态
-- `image` - 头像URL
-- `createdAt` - 创建时间
-- `updatedAt` - 更新时间
+使用 PostgreSQL 数据库，主要表结构：
 
-### session 表
-- `id` - 会话ID (主键)
-- `expiresAt` - 过期时间
-- `token` - 会话令牌 (唯一)
-- `createdAt` - 创建时间
-- `updatedAt` - 更新时间
-- `ipAddress` - IP地址
-- `userAgent` - 用户代理
-- `userId` - 用户ID (外键)
+- `user` - 用户表
+- `session` - 会话表
+- `account` - OAuth账户表
+- `verification` - 验证表
+- `api_keys` - API密钥表
 
-## 开发说明
+## 🔧 开发
 
-### 环境要求
+### 数据库迁移
 
-- Node.js >= 16
-- PostgreSQL >= 12
-- npm >= 8
+```bash
+# 创建迁移
+alembic revision --autogenerate -m "描述"
 
-### 开发工具
+# 执行迁移
+alembic upgrade head
+```
 
-推荐使用 PyCharm 进行开发，可以配置以下运行配置：
+### 测试
 
-1. **Python 启动方式**：运行 `start_dev.py`
-2. **Node.js 启动方式**：运行 `server.js`
+```bash
+# 运行测试
+python -m pytest
 
-### 代码规范
+# 测试特定功能
+python auth_service.py
+```
 
-- 使用 ES6+ 语法
-- 遵循模块化设计原则
-- 统一错误处理
-- 完善的日志记录
+## 📚 API文档
 
-## 故障排除
+启动服务后访问：
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-### 数据库连接失败
+## 🌐 前端集成
 
-1. 检查 PostgreSQL 服务是否运行
-2. 验证 `.env` 文件中的数据库配置
-3. 确认数据库 `admagic` 已创建
-4. 检查用户权限
+前端使用 `auth-client.ts` 与后端API集成，支持：
 
-### 邮件发送失败
+- 用户注册和登录
+- 会话管理
+- 自动token刷新
+- 错误处理
 
-1. 检查邮件服务器配置
-2. 验证邮箱密码（可能需要应用专用密码）
-3. 确认防火墙设置
+## 🚀 部署
 
-### 端口占用
+### Docker部署
 
-如果 8000 端口被占用，可以在 `.env` 文件中修改 `PORT` 配置。
+```bash
+# 构建镜像
+docker build -t admagic-backend .
 
-## 许可证
+# 运行容器
+docker run -p 8000:8000 admagic-backend
+```
+
+### 生产环境
+
+1. 设置生产环境变量
+2. 使用 Gunicorn 或 Uvicorn 部署
+3. 配置反向代理（Nginx）
+4. 设置SSL证书
+
+## 📝 更新日志
+
+### v2.0.0
+- 统一FastAPI应用入口
+- 清理冗余文件
+- 优化项目结构
+- 完善认证系统
+- 添加兼容性接口
+
+## 🤝 贡献
+
+1. Fork 项目
+2. 创建功能分支
+3. 提交更改
+4. 推送到分支
+5. 创建 Pull Request
+
+## 📄 许可证
 
 MIT License

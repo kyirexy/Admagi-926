@@ -1,278 +1,229 @@
 """
-异步邮件服务模块
-支持FastAPI-Users的异步邮件发送功能
+邮件服务模块
+用于发送验证邮件和密码重置邮件
 """
 
-import aiosmtplib
-import os
+import smtplib
+import secrets
+import hashlib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from typing import Optional, Dict, Any
-from jinja2 import Environment, DictLoader
-from dotenv import load_dotenv
-import asyncio
-
-load_dotenv()
-
-# 邮件模板
-EMAIL_TEMPLATES = {
-    # 欢迎邮件模板
-    "welcome": """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>欢迎加入万相营造</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-size: 24px; font-weight: bold;">
-                    万相营造
-                </div>
-            </div>
-            
-            <h2 style="color: #333; text-align: center;">欢迎加入我们！</h2>
-            
-            <p>亲爱的 {{ user_name }}，</p>
-            
-            <p>感谢您注册万相营造 AI电商平台！我们很高兴您选择了我们的服务。</p>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="margin-top: 0; color: #495057;">您可以使用我们的以下功能：</h3>
-                <ul style="color: #6c757d;">
-                    <li>🎨 AI图片生成服务</li>
-                    <li>📝 智能文案创作</li>
-                    <li>🎬 视频内容生成</li>
-                    <li>🛍️ 电商素材制作</li>
-                    <li>💡 创意灵感工具</li>
-                </ul>
-            </div>
-            
-            <p style="text-align: center; margin: 30px 0;">
-                <a href="{{ app_url }}" style="display: inline-block; padding: 12px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                    立即开始使用
-                </a>
-            </p>
-            
-            <p>如果您有任何问题或需要帮助，请随时联系我们的客服团队。</p>
-            
-            <div style="border-top: 1px solid #e9ecef; padding-top: 20px; margin-top: 30px; text-align: center; color: #6c757d; font-size: 14px;">
-                <p>此致，<br>万相营造团队</p>
-                <p>邮箱: support@admagic.com</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    """,
-    
-    # 邮箱验证模板
-    "verification": """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>验证您的邮箱地址</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-size: 24px; font-weight: bold;">
-                    万相营造
-                </div>
-            </div>
-            
-            <h2 style="color: #333; text-align: center;">验证您的邮箱地址</h2>
-            
-            <p>亲爱的 {{ user_name }}，</p>
-            
-            <p>感谢您注册万相营造！请点击下方按钮验证您的邮箱地址：</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{{ verification_url }}" style="display: inline-block; padding: 15px 30px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                    验证邮箱地址
-                </a>
-            </div>
-            
-            <p style="color: #6c757d; font-size: 14px;">
-                如果按钮无法点击，请复制以下链接到浏览器地址栏：<br>
-                <a href="{{ verification_url }}">{{ verification_url }}</a>
-            </p>
-            
-            <p style="color: #6c757d; font-size: 14px;">
-                该链接将在1小时后失效。如果您没有注册万相营造账户，请忽略此邮件。
-            </p>
-            
-            <div style="border-top: 1px solid #e9ecef; padding-top: 20px; margin-top: 30px; text-align: center; color: #6c757d; font-size: 14px;">
-                <p>此致，<br>万相营造团队</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    """,
-    
-    # 密码重置模板
-    "password_reset": """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>重置您的密码</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <div style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; font-size: 24px; font-weight: bold;">
-                    万相营造
-                </div>
-            </div>
-            
-            <h2 style="color: #333; text-align: center;">重置您的密码</h2>
-            
-            <p>亲爱的 {{ user_name }}，</p>
-            
-            <p>您请求重置万相营造账户的密码。请点击下方按钮设置新密码：</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{{ reset_url }}" style="display: inline-block; padding: 15px 30px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                    重置密码
-                </a>
-            </div>
-            
-            <p style="color: #6c757d; font-size: 14px;">
-                如果按钮无法点击，请复制以下链接到浏览器地址栏：<br>
-                <a href="{{ reset_url }}">{{ reset_url }}</a>
-            </p>
-            
-            <p style="color: #6c757d; font-size: 14px;">
-                该链接将在1小时后失效。如果您没有请求重置密码，请忽略此邮件。
-            </p>
-            
-            <div style="border-top: 1px solid #e9ecef; padding-top: 20px; margin-top: 30px; text-align: center; color: #6c757d; font-size: 14px;">
-                <p>此致，<br>万相营造团队</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-}
+from datetime import datetime, timedelta
+from typing import Optional
+import os
+from sqlalchemy.orm import Session
+from models_adapted import User
 
 class EmailService:
-    """异步邮件服务类"""
-    
     def __init__(self):
-        self.smtp_server = os.getenv("SMTP_SERVER", "smtp.qq.com")
-        self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.email_user = os.getenv("EMAIL_USER", "1592880030@qq.com") 
-        self.email_password = os.getenv("EMAIL_PASSWORD", "")
-        self.from_name = os.getenv("FROM_NAME", "万相营造")
-        self.frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        # QQ邮箱SMTP配置
+        self.smtp_server = "smtp.qq.com"
+        self.smtp_port = 587
+        self.sender_email = "1592880030@qq.com"
+        self.sender_password = "lzhjrlfxzewchjhe"  # 授权码
         
-        # 初始化Jinja2模板环境
-        self.template_env = Environment(loader=DictLoader(EMAIL_TEMPLATES))
+    def generate_verification_token(self, email: str) -> str:
+        """生成邮箱验证token"""
+        # 使用邮箱+时间戳+随机字符串生成token
+        timestamp = str(int(datetime.utcnow().timestamp()))
+        random_str = secrets.token_urlsafe(32)
+        raw_token = f"{email}:{timestamp}:{random_str}"
+        
+        # 使用SHA256哈希
+        token = hashlib.sha256(raw_token.encode()).hexdigest()
+        return token
     
-    async def send_email(
-        self,
-        to_email: str,
-        subject: str,
-        html_content: str,
-        text_content: Optional[str] = None
-    ) -> bool:
-        """
-        异步发送邮件
-        """
+    def verify_token(self, token: str, email: str, max_age_hours: int = 24) -> bool:
+        """验证token是否有效（简化版本，实际应该存储在数据库中）"""
+        # 这里是简化实现，实际项目中应该将token存储在数据库中
+        # 并在验证时检查token是否存在且未过期
+        return len(token) == 64  # SHA256哈希长度
+    
+    def send_verification_email(self, to_email: str, verification_url: str) -> bool:
+        """发送邮箱验证邮件"""
         try:
-            # 创建邮件对象
-            message = MIMEMultipart("alternative")
-            message["Subject"] = subject
-            message["From"] = f"{self.from_name} <{self.email_user}>"
-            message["To"] = to_email
+            # 创建邮件内容
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = "万相营造 - 邮箱验证"
+            msg['From'] = self.sender_email
+            msg['To'] = to_email
             
-            # 添加文本内容
-            if text_content:
-                text_part = MIMEText(text_content, "plain", "utf-8")
-                message.attach(text_part)
+            # HTML邮件内容
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>邮箱验证</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                    .button {{ display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                    .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🚀 万相营造</h1>
+                        <p>欢迎加入我们的AI电商平台！</p>
+                    </div>
+                    <div class="content">
+                        <h2>验证您的邮箱地址</h2>
+                        <p>感谢您注册万相营造！为了确保您的账户安全，请点击下面的按钮验证您的邮箱地址：</p>
+                        
+                        <div style="text-align: center;">
+                            <a href="{verification_url}" class="button">验证邮箱</a>
+                        </div>
+                        
+                        <p>如果按钮无法点击，请复制以下链接到浏览器中打开：</p>
+                        <p style="word-break: break-all; background: #eee; padding: 10px; border-radius: 5px;">
+                            {verification_url}
+                        </p>
+                        
+                        <p><strong>注意：</strong>此验证链接将在24小时后过期。</p>
+                        
+                        <p>如果您没有注册万相营造账户，请忽略此邮件。</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2024 万相营造 AI电商平台. 保留所有权利.</p>
+                        <p>这是一封自动发送的邮件，请勿回复。</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
             
-            # 添加HTML内容
-            html_part = MIMEText(html_content, "html", "utf-8")
-            message.attach(html_part)
+            # 纯文本版本
+            text_content = f"""
+            万相营造 - 邮箱验证
             
-            # 异步发送邮件
-            await aiosmtplib.send(
-                message,
-                hostname=self.smtp_server,
-                port=self.smtp_port,
-                start_tls=True,
-                username=self.email_user,
-                password=self.email_password,
-            )
+            欢迎加入我们的AI电商平台！
             
-            print(f"✅ 邮件发送成功: {to_email}")
+            感谢您注册万相营造！为了确保您的账户安全，请访问以下链接验证您的邮箱地址：
+            
+            {verification_url}
+            
+            注意：此验证链接将在24小时后过期。
+            
+            如果您没有注册万相营造账户，请忽略此邮件。
+            
+            © 2024 万相营造 AI电商平台
+            """
+            
+            # 添加邮件内容
+            text_part = MIMEText(text_content, 'plain', 'utf-8')
+            html_part = MIMEText(html_content, 'html', 'utf-8')
+            
+            msg.attach(text_part)
+            msg.attach(html_part)
+            
+            # 发送邮件
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.sender_email, self.sender_password)
+                server.send_message(msg)
+            
+            print(f"✅ 验证邮件已发送到: {to_email}")
             return True
             
         except Exception as e:
-            print(f"❌ 邮件发送失败: {str(e)}")
+            print(f"❌ 发送邮件失败: {str(e)}")
             return False
     
-    async def send_welcome_email(
-        self,
-        to_email: str,
-        user_name: str
-    ) -> bool:
-        """发送欢迎邮件"""
-        template = self.template_env.get_template("welcome")
-        html_content = template.render(
-            user_name=user_name,
-            app_url=self.frontend_url
-        )
-        
-        return await self.send_email(
-            to_email=to_email,
-            subject="欢迎加入万相营造！",
-            html_content=html_content
-        )
-    
-    async def send_verification_email(
-        self,
-        to_email: str,
-        user_name: str,
-        verification_url: str,
-        token: str
-    ) -> bool:
-        """发送邮箱验证邮件"""
-        template = self.template_env.get_template("verification")
-        html_content = template.render(
-            user_name=user_name,
-            verification_url=verification_url,
-            token=token
-        )
-        
-        return await self.send_email(
-            to_email=to_email,
-            subject="验证您的邮箱地址 - 万相营造",
-            html_content=html_content
-        )
-    
-    async def send_reset_password_email(
-        self,
-        to_email: str,
-        user_name: str,
-        reset_url: str,
-        token: str
-    ) -> bool:
+    def send_password_reset_email(self, to_email: str, reset_url: str) -> bool:
         """发送密码重置邮件"""
-        template = self.template_env.get_template("password_reset")
-        html_content = template.render(
-            user_name=user_name,
-            reset_url=reset_url,
-            token=token
-        )
-        
-        return await self.send_email(
-            to_email=to_email,
-            subject="重置您的密码 - 万相营造",
-            html_content=html_content
-        )
+        try:
+            # 创建邮件内容
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = "万相营造 - 密码重置"
+            msg['From'] = self.sender_email
+            msg['To'] = to_email
+            
+            # HTML邮件内容
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>密码重置</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                    .button {{ display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                    .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🔐 万相营造</h1>
+                        <p>密码重置请求</p>
+                    </div>
+                    <div class="content">
+                        <h2>重置您的密码</h2>
+                        <p>我们收到了您的密码重置请求。点击下面的按钮来设置新密码：</p>
+                        
+                        <div style="text-align: center;">
+                            <a href="{reset_url}" class="button">重置密码</a>
+                        </div>
+                        
+                        <p>如果按钮无法点击，请复制以下链接到浏览器中打开：</p>
+                        <p style="word-break: break-all; background: #eee; padding: 10px; border-radius: 5px;">
+                            {reset_url}
+                        </p>
+                        
+                        <p><strong>注意：</strong>此重置链接将在1小时后过期。</p>
+                        
+                        <p>如果您没有请求密码重置，请忽略此邮件，您的密码将保持不变。</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2024 万相营造 AI电商平台. 保留所有权利.</p>
+                        <p>这是一封自动发送的邮件，请勿回复。</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            # 纯文本版本
+            text_content = f"""
+            万相营造 - 密码重置
+            
+            我们收到了您的密码重置请求。请访问以下链接来设置新密码：
+            
+            {reset_url}
+            
+            注意：此重置链接将在1小时后过期。
+            
+            如果您没有请求密码重置，请忽略此邮件，您的密码将保持不变。
+            
+            © 2024 万相营造 AI电商平台
+            """
+            
+            # 添加邮件内容
+            text_part = MIMEText(text_content, 'plain', 'utf-8')
+            html_part = MIMEText(html_content, 'html', 'utf-8')
+            
+            msg.attach(text_part)
+            msg.attach(html_part)
+            
+            # 发送邮件
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.sender_email, self.sender_password)
+                server.send_message(msg)
+            
+            print(f"✅ 密码重置邮件已发送到: {to_email}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ 发送邮件失败: {str(e)}")
+            return False
 
-# 单例模式的邮件服务实例
+# 创建全局邮件服务实例
 email_service = EmailService()

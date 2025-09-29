@@ -231,6 +231,23 @@
     @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl;
   }
 
+  /* 响应式图标尺寸 */
+  .responsive-icon-sm {
+    @apply h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5;
+  }
+
+  .responsive-icon-md {
+    @apply h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6;
+  }
+
+  .responsive-icon-lg {
+    @apply h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7;
+  }
+
+  .responsive-icon-xl {
+    @apply h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8;
+  }
+
   /* 响应式间距 */
   .responsive-padding {
     @apply p-4 sm:p-6 lg:p-8;

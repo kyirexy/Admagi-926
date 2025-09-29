@@ -8,7 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/components/auth/auth-provider';
-import { authClient } from '@/lib/auth-client';
 import { 
   Search, 
   ShoppingCart, 
@@ -24,26 +23,37 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [cartCount] = useState(3); // 示例购物车数量
   const [unreadNotifications] = useState(5); // 示例未读通知
-  const { user, isAuthenticated, isLoading, refetch } = useAuth();
+  const { user, isLoading, refetch } = useAuth();
+  
+  // 减少console.log输出，只在开发环境输出
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Header: user:', user);
+    console.log('Header: isLoading:', isLoading);
+  }
 
   const handleLogout = async () => {
     try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            refetch(); // 刷新认证状态
-            window.location.href = '/auth/login'; // 重定向到登录页
-          },
-          onError: (error) => {
-            console.error('登出失败:', error);
-            // 即使登出失败，也清理本地状态
-            refetch();
-            window.location.href = '/auth/login';
-          }
-        }
+      // 调用后端登出API
+      await fetch('http://localhost:8000/api/auth/sign-out', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        credentials: 'include'
       });
+      
+      // 清除本地存储的token
+      localStorage.removeItem('auth_token');
+      
+      // 刷新认证状态
+      refetch();
+      
+      // 重定向到登录页
+      window.location.href = '/auth/login';
     } catch (error) {
       console.error('登出失败:', error);
+      // 即使登出失败，也清理本地状态
+      localStorage.removeItem('auth_token');
       refetch();
       window.location.href = '/auth/login';
     }
@@ -83,12 +93,12 @@ export function Header() {
             <div className="flex items-center space-x-2">
               <div className="animate-pulse h-8 w-20 bg-gray-200 rounded"></div>
             </div>
-          ) : isAuthenticated && user ? (
+          ) : user ? (
             // 已登录状态
             <>
               {/* 积分显示 */}
-              <div className="flex items-center space-x-1 text-sm">
-                <Crown className="h-4 w-4 text-yellow-500" />
+              <div className="flex items-center space-x-1 text-sm sm:text-base">
+                <Crown className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 text-yellow-500" />
                 <span className="font-medium">{user.credits?.toLocaleString() || 0}</span>
                 {user.is_premium && (
                   <Badge variant="secondary" className="ml-1 text-xs">
@@ -98,12 +108,12 @@ export function Header() {
               </div>
 
               {/* 通知图标 */}
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10">
+                <Bell className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                 {unreadNotifications > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 text-xs"
                   >
                     {unreadNotifications > 9 ? '9+' : unreadNotifications}
                   </Badge>
@@ -111,12 +121,12 @@ export function Header() {
               </Button>
 
               {/* 购物车图标 */}
-              <Button variant="ghost" size="icon" className="relative">
-                <ShoppingCart className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10">
+                <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                 {cartCount > 0 && (
                   <Badge
                     variant="secondary"
-                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                    className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 text-xs"
                   >
                     {cartCount}
                   </Badge>
@@ -128,9 +138,9 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full ml-2">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src="/avatars/default.png" alt={`@${user.username}`} />
+                      <AvatarImage src="/avatars/default.png" alt={`@${user.name || user.email}`} />
                       <AvatarFallback>
-                        {user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                        {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -138,7 +148,7 @@ export function Header() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.name || user.username}</p>
+                      <p className="font-medium">{user.name || user.email}</p>
                       <p className="w-[200px] truncate text-sm text-muted-foreground">
                         {user.email}
                       </p>

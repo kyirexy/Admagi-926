@@ -49,7 +49,7 @@ class User(Base):
     name = Column(String, nullable=True)
     image = Column(String, nullable=True)
     
-    # 业务相关字段
+    # 业务相关字段 - 使用ENUM类型映射到数据库
     role = Column(SQLEnum(UserRole, name="Role"), default=UserRole.USER, nullable=False)
     plan = Column(SQLEnum(UserPlan, name="Plan"), default=UserPlan.FREE, nullable=False)
     orgId = Column("orgId", String, ForeignKey("organizations.id"), nullable=True)

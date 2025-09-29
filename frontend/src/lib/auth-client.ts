@@ -7,17 +7,19 @@ import { useState, useEffect, useCallback } from 'react'
 
 // 类型定义
 interface User {
-  id: number
+  id: string
   email: string
   name: string
-  username: string
-  credits: number
-  is_premium: boolean
+  emailVerified: boolean
+  createdAt: string
+  username?: string
+  credits?: number
+  is_premium?: boolean
 }
 
 interface Session {
-  token: string
-  expires_at: number
+  active: boolean
+  expires_at: string
 }
 
 interface AuthResponse<T = unknown> {
@@ -65,7 +67,7 @@ class AuthClient {
         const result = await response.json()
         
         if (!response.ok) {
-          const error = { message: result.detail || '注册失败' }
+          const error = { message: result.message || result.detail || '注册失败' }
           options?.onError?.({ error })
           throw new Error(error.message)
         }
@@ -110,14 +112,14 @@ class AuthClient {
         const result = await response.json()
         
         if (!response.ok) {
-          const error = { message: result.detail || '登录失败' }
+          const error = { message: result.message || result.detail || '登录失败' }
           options?.onError?.({ error })
           throw new Error(error.message)
         }
         
         // 存储token到localStorage
-        if (result.session?.token) {
-          localStorage.setItem('auth_token', result.session.token)
+        if (result.access_token) {
+          localStorage.setItem('auth_token', result.access_token)
         }
         
         options?.onSuccess?.({ data: result })
@@ -164,21 +166,29 @@ class AuthClient {
   getSession = async (): Promise<AuthResponse<SessionData>> => {
     try {
       const token = localStorage.getItem('auth_token')
+      console.log('getSession: token from localStorage:', token ? 'exists' : 'not found')
+      
       if (!token) {
+        console.log('getSession: no token, returning null session')
         return { data: { user: null, session: null }, error: null }
       }
       
+      console.log('getSession: making request to /api/auth/session')
       const response = await fetch(`${this.baseURL}/api/auth/session`, {
         method: 'GET',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         credentials: 'include'
       })
       
       const result = await response.json()
+      console.log('getSession: response status:', response.status)
+      console.log('getSession: response data:', result)
       
       if (!response.ok) {
+        console.log('getSession: invalid token, clearing localStorage')
         // 如果token无效，清除它
         localStorage.removeItem('auth_token')
         return { data: { user: null, session: null }, error: null }
@@ -186,6 +196,7 @@ class AuthClient {
       
       return { data: result, error: null }
     } catch (error) {
+      console.log('getSession: error occurred:', error)
       return { 
         data: { user: null, session: null }, 
         error: { message: error instanceof Error ? error.message : '获取会话失败' } 
@@ -201,14 +212,18 @@ export const useSession = () => {
   const [error, setError] = useState<{ message: string } | null>(null)
   
   const refetch = useCallback(async () => {
+    console.log('useSession: refetch called')
     setIsPending(true)
     const { data, error } = await authClient.getSession()
+    console.log('useSession: session data received:', data)
+    console.log('useSession: session error:', error)
     setSession(data)
     setError(error)
     setIsPending(false)
   }, [])
   
   useEffect(() => {
+    console.log('useSession: initial effect triggered')
     refetch()
   }, [refetch])
   

@@ -20,13 +20,24 @@ import {
 export default function HomePage() {
   const aiTools = [
     {
-      title: 'AI图片生成',
-      description: '文字转图片，多种艺术风格，高质量创意输出',
+      title: '即梦AI-视频生成3.0 Pro',
+      description: '火山引擎即梦AI-视频生成3.0 Pro，支持文生视频和图生视频，1080P高清专业级质感',
+      icon: <Play className="h-6 w-6" />,
+      href: '/video-generation',
+      previewImage: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400&h=200&fit=crop&crop=center',
+      features: ['文生视频', '图生视频', '1080P高清'],
+      isPopular: true,
+      badge: '最新'
+    },
+    {
+      title: '极梦3.0图片生成',
+      description: '火山引擎极梦3.0模型，文字转图片，多种艺术风格，高质量创意输出',
       icon: <Image className="h-6 w-6" />,
-      href: '/ai-tools/image-generation',
+      href: '/dream-3-image',
       previewImage: 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=400&h=200&fit=crop&crop=center',
-      features: ['多种艺术风格', '高分辨率输出', '批量生成'],
-      isPopular: true
+      features: ['极梦3.0模型', '多种艺术风格', '高分辨率输出'],
+      isPopular: true,
+      badge: '热门'
     },
     {
       title: 'AI页面制作',

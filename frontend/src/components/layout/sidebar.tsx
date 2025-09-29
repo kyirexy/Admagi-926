@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { OptimizedLink } from '@/components/routing/optimized-link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,8 @@ import {
   User
 } from 'lucide-react';
 
+import { useAuth } from '@/components/auth/auth-provider';
+
 interface SidebarItem {
   title: string;
   href?: string;
@@ -51,10 +54,21 @@ const sidebarItems: SidebarItem[] = [
     icon: Home,
   },
   {
-    title: '海河星辰',
+    title: 'AI创作',
+    href: '/ai',
     icon: Sparkles,
     badge: 'NEW',
+  },
+  {
+    title: '海河星辰',
+    icon: Sparkles,
     children: [
+      {
+        title: '即梦AI-视频生成3.0 Pro',
+        href: '/video-generation',
+        icon: Video,
+        badge: '最新',
+      },
       {
         title: '图生视频',
         href: '/image-to-video',
@@ -71,6 +85,12 @@ const sidebarItems: SidebarItem[] = [
     title: 'AI图片',
     icon: Image,
     children: [
+      {
+        title: '极梦3.0图片生成',
+        href: '/dream-3-image',
+        icon: Sparkles,
+        badge: '最新',
+      },
       {
         title: '商品图',
         href: '/ai-tools/product-images',
@@ -194,8 +214,8 @@ function SidebarItemComponent({ item, level = 0 }: SidebarItemComponentProps) {
           onClick={handleToggle}
         >
           <div className="flex items-center space-x-2">
-            {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-            <span className="truncate">{item.title}</span>
+            {item.icon && <item.icon className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0" />}
+            <span className="truncate text-sm sm:text-base">{item.title}</span>
             {item.badge && (
               <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-600">
                 {item.badge}
@@ -203,9 +223,9 @@ function SidebarItemComponent({ item, level = 0 }: SidebarItemComponentProps) {
             )}
           </div>
           {isExpanded ? (
-            <ChevronDown className="h-4 w-4 shrink-0" />
+            <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0" />
           ) : (
-            <ChevronRight className="h-4 w-4 shrink-0" />
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0" />
           )}
         </Button>
         {isExpanded && (
@@ -233,22 +253,30 @@ function SidebarItemComponent({ item, level = 0 }: SidebarItemComponentProps) {
       )}
       asChild
     >
-      <Link href={item.href || '#'}>
+      <OptimizedLink href={item.href || '#'}>
         <div className="flex items-center space-x-2">
-          {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-          <span className="truncate">{item.title}</span>
+          {item.icon && <item.icon className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0" />}
+          <span className="truncate text-sm sm:text-base">{item.title}</span>
           {item.badge && (
             <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-600">
               {item.badge}
             </Badge>
           )}
         </div>
-      </Link>
+      </OptimizedLink>
     </Button>
   );
 }
 
 export function Sidebar() {
+  const { user, isLoading } = useAuth();
+  
+  // 减少console.log输出，只在开发环境输出
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Sidebar: user:', user);
+    console.log('Sidebar: isLoading:', isLoading);
+  }
+
   return (
     <div className="flex h-full w-64 flex-col border-r bg-gray-50/50">
       <div className="flex-1 overflow-hidden py-4">
@@ -261,15 +289,39 @@ export function Sidebar() {
       
       {/* 底部用户信息区域 */}
       <div className="border-t p-3 bg-white">
-        <div className="flex items-center space-x-3">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-            <span className="text-white text-sm font-medium">用</span>
+        {isLoading ? (
+          <div className="flex items-center space-x-3">
+            <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
+            <div className="flex-1 min-w-0">
+              <div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
+              <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">张三</p>
-            <p className="text-xs text-muted-foreground">免费用户</p>
+        ) : user ? (
+          <div className="flex items-center space-x-3">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+              <span className="text-white text-sm font-medium">
+                {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{user.name || user.email}</p>
+              <p className="text-xs text-muted-foreground">
+                {user.is_premium ? 'Pro用户' : '免费用户'}
+              </p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center space-x-3">
+            <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
+              <span className="text-gray-600 text-sm font-medium">?</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">未登录</p>
+              <p className="text-xs text-muted-foreground">请先登录</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

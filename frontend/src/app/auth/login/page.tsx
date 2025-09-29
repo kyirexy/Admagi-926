@@ -6,9 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authClient } from '@/lib/auth-client';
-import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/auth-provider';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
 export default function LoginPage() {
@@ -18,42 +17,50 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { refetch } = useAuth();
   const router = useRouter();
+  const { refetch } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    const { error: authError } = await authClient.signIn.email(
-      {
-        email,
-        password,
-        callbackURL: '/',
-      },
-      {
-        onRequest: () => {
-          setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/sign-in', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        onSuccess: (ctx: unknown) => {
-          console.log('登录成功:', ctx);
-          refetch(); // 刷新认证状态
-          router.push('/'); // 重定向到首页
-        },
-        onError: (ctx: unknown) => {
-          const errorCtx = ctx as { error: { message: string } };
-          setError(errorCtx.error.message || '登录失败，请检查邮箱和密码');
-          setIsLoading(false);
-        }
-      }
-    );
+        credentials: 'include',
+        body: JSON.stringify({
+          email,
+          password
+        })
+      });
 
-    if (authError) {
-      setError(authError.message || '登录失败，请检查邮箱和密码');
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.message || result.detail || '登录失败，请检查邮箱和密码');
+        return;
+      }
+
+      // 存储token
+      if (result.access_token) {
+        localStorage.setItem('auth_token', result.access_token);
+      }
+
+      // 刷新认证状态
+      await refetch();
+
+      // 重定向到首页
+      router.push('/');
+    } catch (error) {
+      console.error('登录失败:', error);
+      setError('登录失败，请重试');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (

@@ -101,6 +101,18 @@ class TokenData(BaseModel):
     user_id: Optional[str] = None
     email: Optional[str] = None
 
+class UserResponse(BaseModel):
+    """用户响应架构"""
+    id: str
+    email: EmailStr
+    name: Optional[str] = None
+    image: Optional[str] = None
+    emailVerified: bool = False
+    createdAt: datetime
+    
+    class Config:
+        from_attributes = True
+
 class LoginForm(BaseModel):
     """登录表单 - FastAPI-Users标准格式"""
     username: EmailStr = Field(..., description="邮箱地址")

@@ -74,7 +74,7 @@ export const signUp = {
       const result = await response.json()
       
       if (!response.ok) {
-        const error = { message: result.detail || '注册失败' }
+        const error = { message: result.message || result.detail || '注册失败' }
         options?.onError?.({ error })
         throw new Error(error.message)
       }
@@ -121,7 +121,7 @@ export const signIn = {
       const result = await response.json()
       
       if (!response.ok) {
-        const error = { message: result.detail || '登录失败' }
+        const error = { message: result.message || result.detail || '登录失败' }
         options?.onError?.({ error })
         throw new Error(error.message)
       }

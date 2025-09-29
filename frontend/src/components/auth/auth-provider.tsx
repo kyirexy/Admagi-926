@@ -13,33 +13,48 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  session: any;
   isLoading: boolean;
-  isAuthenticated: boolean;
+  error: any;
   refetch: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  session: null,
   isLoading: true,
-  isAuthenticated: false,
+  error: null,
   refetch: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, isPending, refetch } = useSession();
+  const { data: sessionData, isPending, error, refetch } = useSession()
   
-  const contextValue: AuthContextType = {
-    user: session?.user || null,
+  console.log('AuthProvider: sessionData:', sessionData)
+  console.log('AuthProvider: isPending:', isPending)
+  console.log('AuthProvider: error:', error)
+  
+  const user = sessionData?.user || null
+  const session = sessionData?.session || null
+  
+  console.log('AuthProvider: user:', user)
+  console.log('AuthProvider: session:', session)
+  
+  const value = {
+    user,
+    session,
     isLoading: isPending,
-    isAuthenticated: !!session?.user,
-    refetch,
-  };
-
+    error,
+    refetch
+  }
+  
+  console.log('AuthProvider: providing value:', value)
+  
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
 export const useAuth = () => {

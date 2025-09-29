@@ -67,6 +67,10 @@ export default function RegisterPage() {
         onSuccess: async (ctx: unknown) => {
           console.log('注册成功:', ctx);
           setIsLoading(false);
+          // 显示成功消息，提示用户检查邮箱
+          setError(''); // 清除错误
+          // 可以显示成功提示，告知用户检查邮箱
+          alert('注册成功！请检查您的邮箱并点击验证链接完成邮箱验证。');
           // 立即刷新认证状态
           await refetch();
           // 延迟一点确保状态更新完成
