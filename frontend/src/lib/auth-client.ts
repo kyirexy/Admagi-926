@@ -205,6 +205,9 @@ class AuthClient {
   }
 }
 
+// 创建并导出认证客户端实例
+export const authClient = new AuthClient()
+
 // useSession hook - moved outside the class to be a proper React hook
 export const useSession = () => {
   const [session, setSession] = useState<SessionData | null>(null)
@@ -234,9 +237,6 @@ export const useSession = () => {
     refetch
   }
 }
-
-// 创建并导出认证客户端实例
-export const authClient = new AuthClient()
 
 // 导出常用方法以保持兼容性
 export const { 

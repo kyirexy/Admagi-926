@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { OptimizedLink } from '@/components/routing/optimized-link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Home,
   Sparkles,
@@ -20,16 +18,11 @@ import {
   ChevronRight,
   Palette,
   Edit,
-  History,
   ShoppingBag,
   TrendingUp,
-  Share2,
-  Globe,
   Package,
-  Newspaper,
   PenTool,
   MessageCircle,
-  ImageIcon,
   Crop,
   ZoomIn,
   Scissors,
@@ -57,17 +50,20 @@ const sidebarItems: SidebarItem[] = [
     title: 'AI创作',
     href: '/ai',
     icon: Sparkles,
-    badge: 'NEW',
   },
   {
-    title: '海河星辰',
+    title: '翔宇星辰',
     icon: Sparkles,
     children: [
       {
-        title: '即梦AI-视频生成3.0 Pro',
+        title: '星辰AI-产品视频生成',
         href: '/video-generation',
         icon: Video,
-        badge: '最新',
+      },
+      {
+        title: '星辰创意画板',
+        href: '/creative-board',
+        icon: Palette,
       },
       {
         title: '图生视频',
@@ -89,7 +85,6 @@ const sidebarItems: SidebarItem[] = [
         title: '极梦3.0图片生成',
         href: '/dream-3-image',
         icon: Sparkles,
-        badge: '最新',
       },
       {
         title: '商品图',
@@ -207,25 +202,20 @@ function SidebarItemComponent({ item, level = 0 }: SidebarItemComponentProps) {
         <Button
           variant="ghost"
           className={cn(
-            'w-full justify-between font-normal h-9 px-3 hover:bg-blue-50 hover:text-blue-600',
+            'w-full justify-between font-normal h-8 px-2 hover:bg-blue-50 hover:text-blue-600',
             level > 0 && 'pl-8',
             isActive && 'bg-blue-50 text-blue-600 font-medium'
           )}
           onClick={handleToggle}
         >
           <div className="flex items-center space-x-2">
-            {item.icon && <item.icon className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0" />}
-            <span className="truncate text-sm sm:text-base">{item.title}</span>
-            {item.badge && (
-              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-600">
-                {item.badge}
-              </Badge>
-            )}
+            {item.icon && <item.icon className="h-3 w-3 sm:h-4 sm:w-4 md:h-4 md:w-4 shrink-0" />}
+            <span className="truncate text-xs sm:text-sm">{item.title}</span>
           </div>
           {isExpanded ? (
-            <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0" />
+            <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 md:h-4 md:w-4 shrink-0" />
           ) : (
-            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0" />
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 md:h-4 md:w-4 shrink-0" />
           )}
         </Button>
         {isExpanded && (
@@ -247,7 +237,7 @@ function SidebarItemComponent({ item, level = 0 }: SidebarItemComponentProps) {
     <Button
       variant="ghost"
       className={cn(
-        'w-full justify-start font-normal h-9 px-3 hover:bg-blue-50 hover:text-blue-600',
+        'w-full justify-start font-normal h-8 px-2 hover:bg-blue-50 hover:text-blue-600',
         level > 0 && 'pl-8',
         isActive && 'bg-blue-50 text-blue-600 font-medium border-r-2 border-blue-600'
       )}
@@ -255,13 +245,8 @@ function SidebarItemComponent({ item, level = 0 }: SidebarItemComponentProps) {
     >
       <OptimizedLink href={item.href || '#'}>
         <div className="flex items-center space-x-2">
-          {item.icon && <item.icon className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 shrink-0" />}
-          <span className="truncate text-sm sm:text-base">{item.title}</span>
-          {item.badge && (
-            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-600">
-              {item.badge}
-            </Badge>
-          )}
+          {item.icon && <item.icon className="h-3 w-3 sm:h-4 sm:w-4 md:h-4 md:w-4 shrink-0" />}
+          <span className="truncate text-xs sm:text-sm">{item.title}</span>
         </div>
       </OptimizedLink>
     </Button>
@@ -278,9 +263,24 @@ export function Sidebar() {
   }
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-gray-50/50">
-      <div className="flex-1 overflow-hidden py-4">
-        <div className="space-y-1 px-3">
+    <div className="flex h-full w-56 flex-col border-r bg-gray-50/50">
+      {/* 顶部品牌区：独立于侧边菜单，点击进入首页 */}
+      <div className="p-3 border-b bg-white">
+        <OptimizedLink href="/">
+          <div className="flex items-center space-x-3">
+            <div className="h-9 w-9 rounded-md bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-semibold">
+              刘
+            </div>
+            <div className="min-w-0">
+              <div className="truncate font-semibold text-sm">翔宇星辰</div>
+              <div className="text-[10px] text-muted-foreground">AI创意平台</div>
+            </div>
+          </div>
+        </OptimizedLink>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-3">
+        <div className="space-y-1 px-2">
           {sidebarItems.map((item, index) => (
             <SidebarItemComponent key={index} item={item} />
           ))}
@@ -305,9 +305,9 @@ export function Sidebar() {
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user.name || user.email}</p>
-              <p className="text-xs text-muted-foreground">
-                {user.is_premium ? 'Pro用户' : '免费用户'}
+              <p className="text-xs font-medium truncate">{user.name || user.email}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {'is_premium' in user && user.is_premium ? 'Pro用户' : '免费用户'}
               </p>
             </div>
           </div>

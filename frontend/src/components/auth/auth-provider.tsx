@@ -17,6 +17,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: any;
   refetch: () => void;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   error: null,
   refetch: () => {},
+  isAuthenticated: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -45,7 +47,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     isLoading: isPending,
     error,
-    refetch
+    refetch,
+    isAuthenticated: !!user
   }
   
   console.log('AuthProvider: providing value:', value)

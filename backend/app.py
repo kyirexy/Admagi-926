@@ -29,8 +29,9 @@ from auth_service import (
     AuthService, get_current_user, get_current_active_user, 
     get_current_superuser
 )
-from ai_routes import router as ai_router
 from video_routes import router as video_router
+from creative_board_routes import router as creative_board_router
+from ai_routes import router as ai_router
 
 # 应用生命周期管理
 @asynccontextmanager
@@ -77,8 +78,9 @@ app.add_middleware(
 )
 
 # ========== 路由注册 ==========
-app.include_router(ai_router)
 app.include_router(video_router)
+app.include_router(creative_board_router)
+app.include_router(ai_router)
 
 # ========== 系统路由 ==========
 

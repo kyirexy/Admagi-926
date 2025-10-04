@@ -12,9 +12,10 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <>
       <RoutePreloader />
+      
       <div className="flex h-screen w-full bg-gray-50">
-        {/* 左侧边栏 */}
-        <aside className="hidden md:block">
+        {/* 左侧边栏 - 添加视觉分隔 */}
+        <aside className="hidden md:block border-r border-gray-200 shadow-sm">
           <Sidebar />
         </aside>
 
